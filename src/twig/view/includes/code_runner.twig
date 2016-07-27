@@ -1,0 +1,122 @@
+<div class="row" id="code-runner-toolbar">
+    <div class="col-md-6">
+        <label class="text-left">
+            <input type="checkbox" id="auto-add-return" checked="checked"/>
+            Auto add return
+        </label>
+    </div>
+    <div class="col-md-6">
+        <div class="input-group">
+            <select class="selectpicker" data-live-search="true" title="&nbsp;"
+                    id="snippet-list"
+                    data-bind="options: snippets, optionsText: 'title', optionsValue: 'title', optionsAfterRender: updateOptions,
+                            event: {change: loadSnippet}">
+            </select>
+            <input type="text" class="form-control" placeholder="Snippet name" id="snippet-title"/>
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" data-bind="click: saveSnippet">Save</button>
+            </span>
+        </div>
+    </div>
+</div>
+<div id="editor"></div>
+<script type="text/javascript">
+    var globalSnippets = {};
+    (function($, undefined) {
+        var langTools = ace.require("ace/ext/language_tools");
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/vibrant_ink");
+        editor.getSession().setMode({path:"ace/mode/php", inline:true});
+        editor.setShowPrintMargin(false);
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true
+        });
+
+        var getCode = function() {
+            var code = editor.getValue().trim();
+            if ($('#auto-add-return').is(':checked')) {
+                code = code.split("\n");
+                var numberOfLines = code.length;
+                var lastLine = code[numberOfLines - 1];
+                code[numberOfLines - 1] = 'return ' + lastLine;
+                code = code.join("\n");
+            }
+
+            return code;
+        };
+
+        $('#editor').keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {
+                $('#code').val(editor.getValue());
+                $('#output').val('Loading...');
+                $.ajax({
+                    method: 'post',
+                    url: '{{ path_for('code_runner') }}',
+                    data: {'code': getCode()}
+                }).done(function(data) {
+                    $('#output').val(data);
+                });
+            }
+        });
+
+        function AppViewModel() {
+            var self = this;
+            globalSnippets = self.snippets = ko.observableArray();
+            self.loadedSnippets = {};
+
+            self.saveSnippet = function() {
+                var title = $('#snippet-title').val();
+                if (title != '') {
+                    var snippets = localStorage.getItem('snippets');
+                    if (!snippets) snippets = '{}';
+                    snippets = JSON.parse(snippets);
+                    snippets[title] = editor.getValue();
+                    localStorage.setItem('snippets', JSON.stringify(snippets));
+                    self.initSnippets();
+                    $('#snippet-list').selectpicker('refresh');
+                }
+            };
+
+            self.loadSnippet = function() {
+                var title = $('#snippet-list').val();
+                if (title) {
+                    editor.setValue(self.loadedSnippets[title]);
+                    editor.clearSelection();
+                    editor.focus();
+                    $('#snippet-title').val(title);
+                }
+            };
+
+            self.initSnippets = function() {
+                self.snippets.removeAll();
+                var loadedSnippets = {};
+
+                var fromFileSnippets = {{ snippets|raw }};
+                fromFileSnippets.forEach(function(snippet) {
+                    loadedSnippets[snippet.title] = snippet.code;
+                });
+
+                var localSnippets = JSON.parse(localStorage.getItem('snippets'));
+                for (var title in localSnippets) {
+                    loadedSnippets[title] = localSnippets[title];
+                }
+
+                for (var title in loadedSnippets) {
+                    self.snippets.push({title: title, code: loadedSnippets[title]});
+                }
+
+                self.loadedSnippets = loadedSnippets;
+            };
+
+            self.updateOptions = function(option, item) {
+                $(option).attr('title', '&nbsp;');
+            };
+
+            self.initSnippets();
+        }
+
+        ko.applyBindings(new AppViewModel(), $('#code-runner-toolbar')[0]);
+    })(jQuery);
+</script>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.3/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ace.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ext-language_tools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/0.11.1/bloodhound.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/3.1.1/bootstrap3-typeahead.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
+    <style type="text/css" media="screen">
+        #editor {
+            width: 100%;
+            height: 500px;
+            font-size: 14px;
+            margin-top: 1em;
+        }
+
+        .container {
+            margin-top: 0.5em;
+            width: 1300px;
+        }
+
+        .tab-pane {
+            margin-top: 1em;
+        }
+
+        .margin-bot-05 { margin-bottom: 0.5em; }
+        .margin-bot-10 { margin-bottom: 1em; }
+        .margin-bot-15 { margin-bottom: 1.5em; }
+        .margin-top-05 { margin-top: 0.5em; }
+        .margin-top-10 { margin-top: 1em; }
+        .margin-top-15 { margin-top: 1.5em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row margin-bot-05">
+        <div class="col-lg-12">
+            <div class="btn-group">
+                <select id="project-selector" class="selectpicker form-control" data-live-search="true" title="Select Magento 2 Project">
+                    {% for name, path in projectsDir %}
+                        <option value="{{ path }}" {% if path == baseDir %} selected {% endif %} title="{{ name }}"> {{ name }} - {{ path }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+<script>
+    (function($, undefined) {
+        function setCookie(key, value) {
+            var expires = new Date();
+            expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000));
+            document.cookie = key + '=' + value +';path=/'+ ';expires=' + expires.toUTCString();
+        }
+
+        $('#project-selector').on('change', function(e) {
+            e.preventDefault();
+            setCookie('BASE_DIR', $(this).val());
+            {% if not baseDir %}
+                window.location.reload();
+            {% endif %}
+        });
+    })(jQuery);
+</script>
+
+{% if baseDir %}
+    <div class="row">
+        <div class="col-lg-9">
+            <textarea id="output" cols="200" rows="15" class="form-control margin-bot-05"></textarea>
+            <div>
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#code-runner" role="tab" data-toggle="tab">Code Runner</a></li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="code-runner">
+                        {% include 'includes/code_runner.twig' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+        </div>
+    </div>
+{% endif %}
+</div>
+</body>
+</html>
+
+
+

@@ -1,0 +1,21 @@
+{
+    "name": "hiephm/magento2_console",
+    "description": "Console to perform various Magento 2 tasks",
+    "authors": [
+        {
+            "name": "Hiep Ho Minh",
+            "email": "hiephm@gmail.com"
+        }
+    ],
+    "minimum-stability": "alpha",
+    "require": {
+        "twig/twig": "~1.0",
+        "slim/slim": "^3.0",
+        "slim/twig-view": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "M2Console\\": "src"
+        }
+    }
+}
